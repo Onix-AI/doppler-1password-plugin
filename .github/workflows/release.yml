@@ -1,0 +1,103 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - os: darwin
+            arch: amd64
+            runner: macos-latest
+          - os: darwin
+            arch: arm64
+            runner: macos-latest
+          - os: linux
+            arch: amd64
+            runner: ubuntu-latest
+          - os: windows
+            arch: amd64
+            runner: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build plugin
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          make doppler/build
+
+      - name: Package binary
+        run: |
+          mkdir -p dist
+          if [ "${{ matrix.os }}" = "windows" ]; then
+            cp ~/.config/op/plugins/local/doppler dist/doppler-${{ matrix.os }}-${{ matrix.arch }}.exe
+          else
+            cp ~/.config/op/plugins/local/doppler dist/doppler-${{ matrix.os }}-${{ matrix.arch }}
+          fi
+
+      - name: Generate checksum
+        run: |
+          cd dist
+          if [ "${{ matrix.os }}" = "windows" ]; then
+            sha256sum doppler-${{ matrix.os }}-${{ matrix.arch }}.exe > doppler-${{ matrix.os }}-${{ matrix.arch }}.exe.sha256
+          else
+            sha256sum doppler-${{ matrix.os }}-${{ matrix.arch }} > doppler-${{ matrix.os }}-${{ matrix.arch }}.sha256
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: doppler-${{ matrix.os }}-${{ matrix.arch }}
+          path: dist/*
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: doppler-*
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          generate_release_notes: true
+          body: |
+            ## Installation
+
+            ### Using Install Script
+            ```bash
+            curl -sSL https://raw.githubusercontent.com/Onix-AI/doppler-1password-plugin/main/scripts/install.sh | bash
+            ```
+
+            ### Manual Installation
+            1. Download the appropriate binary for your platform
+            2. Copy to `~/.config/op/plugins/local/doppler`
+            3. Make executable: `chmod +x ~/.config/op/plugins/local/doppler`
+            4. Run: `op plugin init doppler`
+
+            ## What's Changed
+            See generated release notes below.
