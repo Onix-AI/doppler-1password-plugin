@@ -83,19 +83,3 @@ jobs:
         with:
           files: dist/*
           generate_release_notes: true
-          body: |
-            ## Installation
-
-            ### Using Install Script
-            ```bash
-            curl -sSL https://raw.githubusercontent.com/Onix-AI/doppler-1password-plugin/main/scripts/install.sh | bash
-            ```
-
-            ### Manual Installation
-            1. Download the appropriate binary for your platform
-            2. Copy to `~/.config/op/plugins/local/doppler`
-            3. Make executable: `chmod +x ~/.config/op/plugins/local/doppler`
-            4. Run: `op plugin init doppler`
-
-            ## What's Changed
-            See generated release notes below.
