@@ -38,16 +38,13 @@ jobs:
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
-        run: |
-          make doppler/build
-
-      - name: Package binary
+          CGO_ENABLED: 0
         run: |
           mkdir -p dist
           if [ "${{ matrix.os }}" = "windows" ]; then
-            cp ~/.config/op/plugins/local/doppler dist/doppler-${{ matrix.os }}-${{ matrix.arch }}.exe
+            go build -o dist/doppler-${{ matrix.os }}-${{ matrix.arch }}.exe -ldflags="-X 'main.PluginName=doppler'" ./cmd/contrib/build/
           else
-            cp ~/.config/op/plugins/local/doppler dist/doppler-${{ matrix.os }}-${{ matrix.arch }}
+            go build -o dist/doppler-${{ matrix.os }}-${{ matrix.arch }} -ldflags="-X 'main.PluginName=doppler'" ./cmd/contrib/build/
           fi
 
       - name: Generate checksum
@@ -58,6 +55,7 @@ jobs:
           else
             sha256sum doppler-${{ matrix.os }}-${{ matrix.arch }} > doppler-${{ matrix.os }}-${{ matrix.arch }}.sha256
           fi
+          cat *.sha256
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
