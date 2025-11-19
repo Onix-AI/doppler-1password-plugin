@@ -19,9 +19,6 @@ dist/
 *.tar.gz
 *.zip
 
-# Go cache
-.go-cache/
-
 # macOS
 .DS_Store
 .AppleDouble

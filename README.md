@@ -20,7 +20,25 @@ This plugin enables secure authentication for the [Doppler CLI](https://docs.dop
 
 ## Installation
 
-### Option 1: Install Script (Recommended)
+### Option 1: Homebrew (Recommended)
+
+For macOS and Linux users with Homebrew:
+
+```bash
+brew tap Onix-AI/tap
+brew install doppler-1password-plugin
+```
+
+This provides:
+- ✅ Easy updates with `brew upgrade`
+- ✅ Automatic architecture detection
+- ✅ Clean uninstallation with `brew uninstall`
+
+> **Note:** Homebrew tap setup instructions are in the [Homebrew Tap section](#homebrew-tap-setup) below.
+
+### Option 2: Install Script
+
+Quick installation via curl:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Onix-AI/doppler-1password-plugin/main/scripts/install.sh | bash
@@ -32,17 +50,6 @@ This will:
 - Install to `~/.config/op/plugins/local/`
 - Configure shell integration
 - Run `op plugin init doppler`
-
-### Option 2: Homebrew Tap
-
-For macOS and Linux users with Homebrew:
-
-```bash
-brew tap Onix-AI/tap
-brew install doppler-1password-plugin
-```
-
-> **Note:** Homebrew tap setup instructions are in the [Homebrew Tap section](#homebrew-tap-setup) below.
 
 ### Option 3: Manual Installation
 
