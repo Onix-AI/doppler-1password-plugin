@@ -34,8 +34,6 @@ This provides:
 - ✅ Automatic architecture detection
 - ✅ Clean uninstallation with `brew uninstall`
 
-> **Note:** Homebrew tap setup instructions are in the [Homebrew Tap section](#homebrew-tap-setup) below.
-
 ### Option 2: Install Script
 
 Quick installation via curl:
@@ -165,64 +163,6 @@ Ensure your Personal Token:
 - Starts with `dp.pt.`
 - Is 47-50 characters total length
 - Contains only alphanumeric characters after the prefix
-
-## Homebrew Tap Setup
-
-To set up the Homebrew tap for easy distribution to your team:
-
-1. **Create a new repository**: `github.com/Onix-AI/homebrew-tap`
-
-2. **Create the formula** at `Formula/doppler-1password-plugin.rb`:
-   ```ruby
-   class DopplerOnepasswordPlugin < Formula
-     desc "1Password shell plugin for Doppler CLI"
-     homepage "https://github.com/Onix-AI/doppler-1password-plugin"
-     version "1.0.0"
-
-     if OS.mac? && Hardware::CPU.arm?
-       url "https://github.com/Onix-AI/doppler-1password-plugin/releases/download/v1.0.0/doppler-darwin-arm64"
-       sha256 "CHECKSUM_HERE"
-     elsif OS.mac?
-       url "https://github.com/Onix-AI/doppler-1password-plugin/releases/download/v1.0.0/doppler-darwin-amd64"
-       sha256 "CHECKSUM_HERE"
-     elsif OS.linux?
-       url "https://github.com/Onix-AI/doppler-1password-plugin/releases/download/v1.0.0/doppler-linux-amd64"
-       sha256 "CHECKSUM_HERE"
-     end
-
-     def install
-       bin.install "doppler-#{OS.kernel_name.downcase}-#{Hardware::CPU.arch}" => "doppler-1password"
-
-       # Install to 1Password plugin directory
-       (buildpath/"install").write <<~EOS
-         #!/bin/bash
-         mkdir -p ~/.config/op/plugins/local
-         cp #{bin}/doppler-1password ~/.config/op/plugins/local/doppler
-         chmod +x ~/.config/op/plugins/local/doppler
-         op plugin init doppler
-       EOS
-
-       bin.install "install" => "doppler-1password-install"
-     end
-
-     def caveats
-       <<~EOS
-         To complete installation, run:
-           doppler-1password-install
-
-         Then add to your shell config (~/.zshrc or ~/.bashrc):
-           source ~/.config/op/plugins.sh
-       EOS
-     end
-   end
-   ```
-
-3. **Team installation**:
-   ```bash
-   brew tap Onix-AI/tap
-   brew install doppler-1password-plugin
-   doppler-1password-install
-   ```
 
 ## Development
 
