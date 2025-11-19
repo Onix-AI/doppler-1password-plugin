@@ -42,11 +42,16 @@ jobs:
           echo "AMD64: $SHA256_AMD64"
           echo "Linux: $SHA256_LINUX"
 
+      - name: Setup SSH for deploy key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+
       - name: Checkout homebrew-tap repository
         uses: actions/checkout@v4
         with:
           repository: Onix-AI/homebrew-tap
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          ssh-key: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
           path: homebrew-tap
 
       - name: Update formula
