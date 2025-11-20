@@ -86,6 +86,6 @@ jobs:
 
       - name: Trigger Homebrew Formula Update
         run: |
-          gh workflow run update-homebrew-formula.yml -f tag=${GITHUB_REF#refs/tags/}
+          gh workflow run update-homebrew-formula.yml -R ${{ github.repository }} -f tag=${GITHUB_REF#refs/tags/}
         env:
           GH_TOKEN: ${{ github.token }}
