@@ -28,11 +28,27 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
+
+      - name: Prepare build environment
+        run: |
+          # Copy our doppler plugin into submodule
+          cp -r plugins/doppler vendor/shell-plugins/plugins/doppler
+          cd vendor/shell-plugins
+
+          # Validate plugin (only on first matrix job)
+          if [ "${{ matrix.os }}" = "darwin" ] && [ "${{ matrix.arch }}" = "arm64" ]; then
+            make doppler/validate
+          fi
+
+          # Generate registry with all plugins
+          make registry
 
       - name: Build plugin
         env:
@@ -40,11 +56,12 @@ jobs:
           GOARCH: ${{ matrix.arch }}
           CGO_ENABLED: 0
         run: |
-          mkdir -p dist
+          cd vendor/shell-plugins
+          mkdir -p ../../dist
           if [ "${{ matrix.os }}" = "windows" ]; then
-            go build -o dist/doppler-${{ matrix.os }}-${{ matrix.arch }}.exe -ldflags="-X 'main.PluginName=doppler'" ./cmd/contrib/build/
+            go build -o ../../dist/doppler-${{ matrix.os }}-${{ matrix.arch }}.exe -ldflags="-X 'main.PluginName=doppler'" ./cmd/contrib/build/
           else
-            go build -o dist/doppler-${{ matrix.os }}-${{ matrix.arch }} -ldflags="-X 'main.PluginName=doppler'" ./cmd/contrib/build/
+            go build -o ../../dist/doppler-${{ matrix.os }}-${{ matrix.arch }} -ldflags="-X 'main.PluginName=doppler'" ./cmd/contrib/build/
           fi
 
       - name: Generate checksum

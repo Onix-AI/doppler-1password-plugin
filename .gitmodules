@@ -1,0 +1,3 @@
+[submodule "vendor/shell-plugins"]
+	path = vendor/shell-plugins
+	url = https://github.com/1Password/shell-plugins.git

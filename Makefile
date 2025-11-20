@@ -1,51 +1,29 @@
-config_dir := $(shell go run cmd/contrib/scripts/config_dir_getter.go)
-plugins_dir := ${config_dir}/plugins/local
+.PHONY: build build-with-validation build-for-release test clean
 
-.PHONY: new-plugin registry %/example-secrets %/validate %/build test
+# Quick local build (no validation)
+build:
+	@./scripts/build.sh
 
-beta-notice:
-	@echo "# BETA NOTICE: The plugin ecosystem is in beta and is subject to change."
-	@echo "# You may have to update or recompile your local builds every now and then to keep them"
-	@echo "# compatible with the 1Password CLI updates."
-	@echo
+# Build with validation (recommended for testing)
+build-with-validation:
+	@./scripts/build.sh --validate
 
-new-plugin: beta-notice
-	go run cmd/contrib/main.go $@
+# Full build with validation and tests (for CI/releases)
+build-for-release:
+	@./scripts/build.sh --validate --test
 
-registry:
-	@rm -f plugins/plugins.go
-	@go run cmd/contrib/main.go $@
-
-%/example-secrets: registry
-	go run cmd/contrib/main.go $@
-
-%/validate: registry beta-notice
-	go run cmd/contrib/main.go $@
-
-validate: registry
-	go run cmd/contrib/main.go $@
-
-registry.json: registry
-	go run cmd/contrib/main.go $@
-
-$(plugins_dir):
-	mkdir -p $(plugins_dir)
-	chmod 700 $(plugins_dir)
-	chmod 700 ${config_dir}
-	chmod 700 ${config_dir}/plugins
-
-%/build: $(plugins_dir) registry beta-notice
-	$(eval plugin := $(firstword $(subst /, ,$@)))
-	@go run cmd/contrib/main.go $(plugin)/exists
-	go build -o $(plugins_dir)/$(plugin) -ldflags="-X 'main.PluginName=$(plugin)'" ./cmd/contrib/build/
-
+# Run tests only
 test:
-	go test ./...
+	@cd vendor/shell-plugins/plugins/doppler && go test -v .
 
-lint:
-	# Version used should stay in sync with version in CI (.github/workflows/test.yaml).
-	docker run --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.50.1 golangci-lint run
+# Clean build artifacts
+clean:
+	@rm -rf vendor/shell-plugins/plugins/doppler
+	@cd vendor/shell-plugins && git checkout -- plugins/
 
-%/remove-local: beta-notice
-	$(eval plugin := $(firstword $(subst /, ,$@)))
-	rm -f ~/.op/plugins/local/$(plugin)
+# Update submodule to latest
+update-submodule:
+	@git submodule update --remote vendor/shell-plugins
+	@echo "✅ Submodule updated to latest"
+
+.DEFAULT_GOAL := build
