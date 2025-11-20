@@ -83,3 +83,9 @@ jobs:
         with:
           files: dist/*
           generate_release_notes: true
+
+      - name: Trigger Homebrew Formula Update
+        run: |
+          gh workflow run update-homebrew-formula.yml -f tag=${GITHUB_REF#refs/tags/}
+        env:
+          GH_TOKEN: ${{ github.token }}
