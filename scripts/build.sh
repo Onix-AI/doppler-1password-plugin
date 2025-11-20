@@ -51,6 +51,19 @@ cp -r "$REPO_ROOT/plugins/doppler" "$SUBMODULE_DIR/plugins/doppler"
 
 cd "$SUBMODULE_DIR"
 
+# Set up isolated build cache for all Go commands
+export GOMODCACHE="$SUBMODULE_DIR/.go-cache/mod"
+export GOCACHE="$SUBMODULE_DIR/.go-cache/build"
+
+# Clear cache to ensure clean build
+if [ -d "$SUBMODULE_DIR/.go-cache" ]; then
+  echo "🧹 Cleaning build cache..."
+  chmod -R +w "$SUBMODULE_DIR/.go-cache" 2>/dev/null || true
+  rm -rf "$SUBMODULE_DIR/.go-cache"
+fi
+mkdir -p "$SUBMODULE_DIR/.go-cache/mod"
+mkdir -p "$SUBMODULE_DIR/.go-cache/build"
+
 if [ "$VALIDATE" = true ]; then
   echo "✅ Validating plugin..."
   make doppler/validate || {
