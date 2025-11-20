@@ -29,27 +29,8 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      - name: Get release asset IDs and checksums
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Download binaries and calculate checksums
         run: |
-          # Get asset IDs from GitHub API
-          ASSET_ID_ARM64=$(gh api repos/${{ github.repository }}/releases/tags/${{ steps.release.outputs.tag }} \
-            --jq '.assets[] | select(.name=="doppler-darwin-arm64") | .id')
-          ASSET_ID_AMD64=$(gh api repos/${{ github.repository }}/releases/tags/${{ steps.release.outputs.tag }} \
-            --jq '.assets[] | select(.name=="doppler-darwin-amd64") | .id')
-          ASSET_ID_LINUX=$(gh api repos/${{ github.repository }}/releases/tags/${{ steps.release.outputs.tag }} \
-            --jq '.assets[] | select(.name=="doppler-linux-amd64") | .id')
-
-          echo "ASSET_ID_ARM64=$ASSET_ID_ARM64" >> $GITHUB_ENV
-          echo "ASSET_ID_AMD64=$ASSET_ID_AMD64" >> $GITHUB_ENV
-          echo "ASSET_ID_LINUX=$ASSET_ID_LINUX" >> $GITHUB_ENV
-
-          echo "Asset IDs:"
-          echo "ARM64: $ASSET_ID_ARM64"
-          echo "AMD64: $ASSET_ID_AMD64"
-          echo "Linux: $ASSET_ID_LINUX"
-
           # Download binaries and calculate checksums
           mkdir -p checksums
           cd checksums
@@ -91,15 +72,10 @@ jobs:
           # Update version
           sed -i "s/version \".*\"/version \"${{ steps.release.outputs.version }}\"/" "$FORMULA_FILE"
 
-          # Update asset IDs in URLs
-          # ARM64 asset ID
-          sed -i "0,/releases\/assets\/[0-9]/{s|releases/assets/[0-9]*|releases/assets/$ASSET_ID_ARM64|}" "$FORMULA_FILE"
-
-          # AMD64 asset ID (second occurrence)
-          sed -i "0,/releases\/assets\/[0-9]/{n;:a;n;/releases\/assets\/[0-9]/!ba;s|releases/assets/[0-9]*|releases/assets/$ASSET_ID_AMD64|}" "$FORMULA_FILE"
-
-          # Linux asset ID (third occurrence)
-          sed -i "0,/releases\/assets\/[0-9]/{n;:a;n;/releases\/assets\/[0-9]/!ba;n;:b;n;/releases\/assets\/[0-9]/!bb;s|releases/assets/[0-9]*|releases/assets/$ASSET_ID_LINUX|}" "$FORMULA_FILE"
+          # Update download URLs with new version tag
+          sed -i "s|releases/download/v[0-9.]\+/doppler-darwin-arm64|releases/download/${{ steps.release.outputs.tag }}/doppler-darwin-arm64|" "$FORMULA_FILE"
+          sed -i "s|releases/download/v[0-9.]\+/doppler-darwin-amd64|releases/download/${{ steps.release.outputs.tag }}/doppler-darwin-amd64|" "$FORMULA_FILE"
+          sed -i "s|releases/download/v[0-9.]\+/doppler-linux-amd64|releases/download/${{ steps.release.outputs.tag }}/doppler-linux-amd64|" "$FORMULA_FILE"
 
           # Update checksums
           # macOS ARM64 checksum (first on_arm block)
@@ -124,11 +100,6 @@ jobs:
           git commit -m "Update doppler-1password-plugin to ${{ steps.release.outputs.tag }}
 
           Automated update from release ${{ steps.release.outputs.tag }}
-
-          Asset IDs:
-          - macOS ARM64: ${{ env.ASSET_ID_ARM64 }}
-          - macOS AMD64: ${{ env.ASSET_ID_AMD64 }}
-          - Linux AMD64: ${{ env.ASSET_ID_LINUX }}
 
           Checksums:
           - macOS ARM64: ${{ env.SHA256_ARM64 }}

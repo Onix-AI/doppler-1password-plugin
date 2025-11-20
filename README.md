@@ -22,36 +22,27 @@ This plugin enables secure authentication for the [Doppler CLI](https://docs.dop
 
 ### Option 1: Homebrew (Recommended)
 
-For Onix AI team members with SSH access:
-
-**Prerequisites:**
-- SSH access to Onix-AI GitHub organization
-- 1Password CLI installed
-
-**Setup:**
 ```bash
-# 1. Install 1Password CLI (if not already installed)
-brew install 1password-cli
+# Tap the repository
+brew tap onix-ai/tap
 
-# 2. Set up Homebrew authentication with 1Password
-op plugin init brew
-# Select your GitHub token (needs 'repo' scope)
-# Choose "Use as global default on my system"
-
-# 3. Add to your shell config (~/.zshrc or ~/.bashrc)
-echo 'source ~/.config/op/plugins.sh' >> ~/.zshrc
-source ~/.zshrc
-
-# 4. Tap the private repository using SSH
-brew tap onix-ai/tap git@github.com:Onix-AI/homebrew-tap.git
-
-# 5. Install the plugin (Touch ID prompt will appear)
+# Install the plugin
 brew install doppler-1password-plugin
+
+# Run the setup script
+doppler-1password-setup
+
+# Initialize the plugin with 1Password
+op plugin init doppler
+```
+
+Add to your shell config (`~/.zshrc` or `~/.bashrc`):
+```bash
+source ~/.config/op/plugins.sh
 ```
 
 This provides:
-- ✅ Secure authentication with biometrics
-- ✅ Easy updates with `brew upgrade`
+- ✅ Easy installation and updates
 - ✅ Automatic architecture detection
 - ✅ Clean uninstallation with `brew uninstall`
 
