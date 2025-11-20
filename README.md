@@ -26,11 +26,8 @@ This plugin enables secure authentication for the [Doppler CLI](https://docs.dop
 # Tap the repository
 brew tap onix-ai/tap
 
-# Install the plugin
+# Install the plugin (automatically sets up plugin directory)
 brew install doppler-1password-plugin
-
-# Run the setup script
-doppler-1password-setup
 
 # Initialize the plugin with 1Password
 op plugin init doppler
@@ -44,7 +41,8 @@ source ~/.config/op/plugins.sh
 This provides:
 - ✅ Easy installation and updates
 - ✅ Automatic architecture detection
-- ✅ Clean uninstallation with `brew uninstall`
+- ✅ Automatic setup (no manual steps required)
+- ✅ Clean uninstallation with `brew uninstall` (removes plugin automatically)
 
 ### Option 2: Install Script
 
