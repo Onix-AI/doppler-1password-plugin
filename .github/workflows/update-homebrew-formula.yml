@@ -18,17 +18,35 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Download release assets
+      - name: Get release asset IDs and checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          # Get asset IDs from GitHub API
+          ASSET_ID_ARM64=$(gh api repos/${{ github.repository }}/releases/tags/${{ steps.release.outputs.tag }} \
+            --jq '.assets[] | select(.name=="doppler-darwin-arm64") | .id')
+          ASSET_ID_AMD64=$(gh api repos/${{ github.repository }}/releases/tags/${{ steps.release.outputs.tag }} \
+            --jq '.assets[] | select(.name=="doppler-darwin-amd64") | .id')
+          ASSET_ID_LINUX=$(gh api repos/${{ github.repository }}/releases/tags/${{ steps.release.outputs.tag }} \
+            --jq '.assets[] | select(.name=="doppler-linux-amd64") | .id')
+
+          echo "ASSET_ID_ARM64=$ASSET_ID_ARM64" >> $GITHUB_ENV
+          echo "ASSET_ID_AMD64=$ASSET_ID_AMD64" >> $GITHUB_ENV
+          echo "ASSET_ID_LINUX=$ASSET_ID_LINUX" >> $GITHUB_ENV
+
+          echo "Asset IDs:"
+          echo "ARM64: $ASSET_ID_ARM64"
+          echo "AMD64: $ASSET_ID_AMD64"
+          echo "Linux: $ASSET_ID_LINUX"
+
+          # Download binaries and calculate checksums
           mkdir -p checksums
           cd checksums
 
-          # Download binaries
           curl -sL "https://github.com/${{ github.repository }}/releases/download/${{ steps.release.outputs.tag }}/doppler-darwin-arm64" -o doppler-darwin-arm64
           curl -sL "https://github.com/${{ github.repository }}/releases/download/${{ steps.release.outputs.tag }}/doppler-darwin-amd64" -o doppler-darwin-amd64
           curl -sL "https://github.com/${{ github.repository }}/releases/download/${{ steps.release.outputs.tag }}/doppler-linux-amd64" -o doppler-linux-amd64
 
-          # Calculate checksums
           SHA256_ARM64=$(sha256sum doppler-darwin-arm64 | cut -d' ' -f1)
           SHA256_AMD64=$(sha256sum doppler-darwin-amd64 | cut -d' ' -f1)
           SHA256_LINUX=$(sha256sum doppler-linux-amd64 | cut -d' ' -f1)
@@ -37,7 +55,7 @@ jobs:
           echo "SHA256_AMD64=$SHA256_AMD64" >> $GITHUB_ENV
           echo "SHA256_LINUX=$SHA256_LINUX" >> $GITHUB_ENV
 
-          echo "Checksums calculated:"
+          echo "Checksums:"
           echo "ARM64: $SHA256_ARM64"
           echo "AMD64: $SHA256_AMD64"
           echo "Linux: $SHA256_LINUX"
@@ -62,10 +80,17 @@ jobs:
           # Update version
           sed -i "s/version \".*\"/version \"${{ steps.release.outputs.version }}\"/" "$FORMULA_FILE"
 
-          # Update URLs
-          sed -i "s|download/v[0-9.]*|download/${{ steps.release.outputs.tag }}|g" "$FORMULA_FILE"
+          # Update asset IDs in URLs
+          # ARM64 asset ID
+          sed -i "0,/releases\/assets\/[0-9]/{s|releases/assets/[0-9]*|releases/assets/$ASSET_ID_ARM64|}" "$FORMULA_FILE"
 
-          # Update checksums - using more specific patterns to avoid conflicts
+          # AMD64 asset ID (second occurrence)
+          sed -i "0,/releases\/assets\/[0-9]/{n;:a;n;/releases\/assets\/[0-9]/!ba;s|releases/assets/[0-9]*|releases/assets/$ASSET_ID_AMD64|}" "$FORMULA_FILE"
+
+          # Linux asset ID (third occurrence)
+          sed -i "0,/releases\/assets\/[0-9]/{n;:a;n;/releases\/assets\/[0-9]/!ba;n;:b;n;/releases\/assets\/[0-9]/!bb;s|releases/assets/[0-9]*|releases/assets/$ASSET_ID_LINUX|}" "$FORMULA_FILE"
+
+          # Update checksums
           # macOS ARM64 checksum (first on_arm block)
           sed -i "0,/on_arm do/{/on_arm do/,/end/{s/sha256 \"[^\"]*\"/sha256 \"$SHA256_ARM64\"/}}" "$FORMULA_FILE"
 
@@ -88,6 +113,11 @@ jobs:
           git commit -m "Update doppler-1password-plugin to ${{ steps.release.outputs.tag }}
 
           Automated update from release ${{ steps.release.outputs.tag }}
+
+          Asset IDs:
+          - macOS ARM64: ${{ env.ASSET_ID_ARM64 }}
+          - macOS AMD64: ${{ env.ASSET_ID_AMD64 }}
+          - Linux AMD64: ${{ env.ASSET_ID_LINUX }}
 
           Checksums:
           - macOS ARM64: ${{ env.SHA256_ARM64 }}
