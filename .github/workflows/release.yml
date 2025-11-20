@@ -146,15 +146,15 @@ jobs:
           sed -i "s|releases/download/v[0-9.]\+/doppler-darwin-amd64|releases/download/${{ steps.release.outputs.tag }}/doppler-darwin-amd64|" "$FORMULA_FILE"
           sed -i "s|releases/download/v[0-9.]\+/doppler-linux-amd64|releases/download/${{ steps.release.outputs.tag }}/doppler-linux-amd64|" "$FORMULA_FILE"
 
-          # Update checksums
-          # macOS ARM64 checksum (first on_arm block)
-          sed -i "0,/on_arm do/{/on_arm do/,/end/{s/sha256 \"[^\"]*\"/sha256 \"$SHA256_ARM64\"/}}" "$FORMULA_FILE"
+          # Update checksums - target the line after each URL
+          # macOS ARM64 checksum
+          sed -i "/doppler-darwin-arm64/{n;s/sha256 \"[^\"]*\"/sha256 \"$SHA256_ARM64\"/}" "$FORMULA_FILE"
 
-          # macOS AMD64 checksum (first on_intel block)
-          sed -i "0,/on_intel do/{/on_intel do/,/end/{s/sha256 \"[^\"]*\"/sha256 \"$SHA256_AMD64\"/}}" "$FORMULA_FILE"
+          # macOS AMD64 checksum
+          sed -i "/doppler-darwin-amd64/{n;s/sha256 \"[^\"]*\"/sha256 \"$SHA256_AMD64\"/}" "$FORMULA_FILE"
 
-          # Linux AMD64 checksum (inside on_linux block)
-          sed -i "/on_linux do/,/^  end/{s/sha256 \"[^\"]*\"/sha256 \"$SHA256_LINUX\"/}" "$FORMULA_FILE"
+          # Linux AMD64 checksum
+          sed -i "/doppler-linux-amd64/{n;s/sha256 \"[^\"]*\"/sha256 \"$SHA256_LINUX\"/}" "$FORMULA_FILE"
 
           echo "Formula updated:"
           cat "$FORMULA_FILE"
