@@ -181,39 +181,80 @@ Ensure your Personal Token:
 ### Building Locally
 
 ```bash
-# Clone the repository
-git clone https://github.com/Onix-AI/doppler-1password-plugin.git
+# Clone the repository with submodules
+git clone --recursive https://github.com/Onix-AI/doppler-1password-plugin.git
 cd doppler-1password-plugin
 
-# Build for your platform
-make doppler/build
+# Quick build (no validation)
+make build
 
-# Test
+# Build with validation (recommended for testing)
+make build-with-validation
+
+# Full build with validation and tests (for releases)
+make build-for-release
+
+# Clean build artifacts
+make clean
+
+# Test the plugin
 op plugin init doppler
 doppler me
+```
+
+### Build Script
+
+The build process is managed by `scripts/build.sh` which:
+1. Updates the shell-plugins submodule to latest
+2. Copies our doppler plugin into the submodule
+3. Optionally validates the plugin schema (`--validate`)
+4. Optionally runs tests (`--test`)
+5. Generates the plugin registry (includes all official plugins)
+6. Builds with isolated cache to avoid stale builds
+
+You can also run the script directly:
+```bash
+# Quick build
+./scripts/build.sh
+
+# With validation
+./scripts/build.sh --validate
+
+# With validation and tests
+./scripts/build.sh --validate --test
+
+# Build to custom location
+./scripts/build.sh --output ./dist/doppler
 ```
 
 ### Running Tests
 
 ```bash
-go test ./plugins/doppler/ -v
+# Run tests via Makefile
+make test
+
+# Or manually
+cd vendor/shell-plugins/plugins/doppler && go test -v .
 ```
 
-### Building for Multiple Platforms
+### Validating the Plugin
 
+Validate plugin schema and structure:
 ```bash
-# macOS Intel
-GOOS=darwin GOARCH=amd64 make doppler/build
+# Via Makefile
+cd vendor/shell-plugins && make doppler/validate
 
-# macOS Apple Silicon
-GOOS=darwin GOARCH=arm64 make doppler/build
-
-# Linux
-GOOS=linux GOARCH=amd64 make doppler/build
-
-# Windows
-GOOS=windows GOARCH=amd64 make doppler/build
+# Or during build
+make build-with-validation
 ```
+
+### Architecture
+
+This plugin uses the official [1Password shell-plugins](https://github.com/1Password/shell-plugins) repository as a submodule. This ensures:
+- ✅ Compatibility with the 1Password CLI
+- ✅ Includes all official plugin infrastructure
+- ✅ Always uses the latest SDK
+- ✅ Binaries work with `op plugin init`
 
 ## Contributing
 
