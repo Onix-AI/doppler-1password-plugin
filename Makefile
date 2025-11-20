@@ -19,7 +19,11 @@ test:
 # Clean build artifacts
 clean:
 	@rm -rf vendor/shell-plugins/plugins/doppler
-	@cd vendor/shell-plugins && git checkout -- plugins/
+	@if [ -d vendor/shell-plugins/.go-cache ]; then \
+		chmod -R +w vendor/shell-plugins/.go-cache 2>/dev/null || true; \
+		rm -rf vendor/shell-plugins/.go-cache; \
+	fi
+	@cd vendor/shell-plugins && git checkout -- plugins/ 2>/dev/null || true
 
 # Update submodule to latest
 update-submodule:
